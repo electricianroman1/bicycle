@@ -13,6 +13,8 @@ services:
     environment:
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: dnd
+      JWT_SECRET: "change_me_in_prod"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
     ports:
       - "8000:8000"
     depends_on:

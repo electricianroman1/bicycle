@@ -1,0 +1,9 @@
+### Создать лист из LSS-файла
+# Замените <PAYLOAD> на содержимое вашего JSON
+POST http://localhost:8000/api/v1/sheets
+Authorization: Bearer demo
+Content-Type: application/json
+
+{
+  "payload": <PAYLOAD>
+}

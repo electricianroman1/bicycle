@@ -1,10 +1,10 @@
 FROM python:3.11-slim
 
 WORKDIR /app
+# Контекст билда = ./telegram_bot
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app
 
-COPY app ./app
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "telegram_bot.py"]

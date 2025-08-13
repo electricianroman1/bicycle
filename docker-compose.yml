@@ -1,22 +1,47 @@
-version: "3.8"
+version: '3.9'
+
 services:
   mongo:
-    image: mongo:7
+    image: mongo:6
+    container_name: mongo
     restart: always
-    volumes:
-      - mongo_data:/data/db
     ports:
       - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+    depends_on:
+      - mongo
 
   api:
     build: ./backend
-    environment:
-      MONGO_URI: mongodb://mongo:27017
-      MONGO_DB: dnd
-      JWT_SECRET: "change_me_in_prod"
-      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+    container_name: backend
+    restart: always
+    env_file:
+      - .env
     ports:
       - "8000:8000"
+    depends_on:
+      - mongo
+
+  telegram_bot:
+    build: ./telegram_bot
+    container_name: telegram_bot
+    restart: always
+    env_file:
+      - .env
     depends_on:
       - mongo
 

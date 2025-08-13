@@ -1,40 +1,42 @@
-from pydantic import BaseModel, Field
-from typing import Any, Optional
+from pydantic import BaseModel, Field, validator
+from typing import Optional, Any, Dict
 from datetime import datetime
 
-# --- Sheets ---
-class SheetIn(BaseModel):
-    name: str = Field(..., example="Thorin Oakenshield")
-    data: dict[str, Any] = Field(..., description="Полный JSON листа персонажа")
+class LSSSheet(BaseModel):
+    payload: Dict[str, Any] = Field(..., description="Полный LSS JSON как есть")
+    name: str = Field(..., description="Имя персонажа")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    owner: Optional[str] = None
 
-class SheetOut(SheetIn):
-    id: str
+    @validator("name", pre=True, always=True)
+    def ensure_name(cls, v, values):
+        if v:
+            return v
+        payload = values.get("payload") or {}
+        data_field = payload.get("data")
+        name_value = None
+        try:
+            if isinstance(data_field, str):
+                import json as _json
+                data_parsed = _json.loads(data_field)
+            elif isinstance(data_field, dict):
+                data_parsed = data_field
+            else:
+                data_parsed = {}
+            name_value = (data_parsed.get("name") or {}).get("value")
+        except Exception:
+            name_value = None
+        if isinstance(name_value, str) and name_value.strip():
+            return name_value.strip()
+        return payload.get("name") or "Безымянный"
+
+class LSSCreate(BaseModel):
+    payload: Dict[str, Any]
+    name: Optional[str] = None
+
+class LSSPublic(BaseModel):
+    id: str = Field(..., alias="_id")
+    name: str
+    owner: Optional[str] = None
     created_at: datetime
-    updated_at: datetime
-
-class UpdateSheet(BaseModel):
-    name: Optional[str]
-    data: Optional[dict[str, Any]]
-
-# --- Users & Auth ---
-class UserCreate(BaseModel):
-    username: str
-    password: str
-
-class UserInDB(BaseModel):
-    id: Optional[str]
-    username: str
-    hashed_password: str
-    created_at: Optional[datetime]
-
-class UserPublic(BaseModel):
-    id: str
-    username: str
-    created_at: datetime
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
+    payload: Dict[str, Any]

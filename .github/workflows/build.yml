@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ "main", "artem_forward" ]
+  push:
+    branches: [ "main", "artem_forward" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install -r telegram_bot/requirements.txt
+
+      - name: Check syntax
+        run: python -m py_compile $(git ls-files '*.py')
+
+      - name: Build docker images
+        run: docker compose build
